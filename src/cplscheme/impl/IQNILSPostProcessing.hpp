@@ -97,6 +97,7 @@ private:
    virtual void computeQNUpdate(DataMap& cplData, DataValues& xUpdate);
    
    void computeQNUpdate_QRFilter1(PostProcessing::DataMap& cplData, DataValues& xUpdate);
+   void computeQNUpdate_QRFilter1_prime(PostProcessing::DataMap& cplData, DataValues& xUpdate);
    void computeQNUpdate_QRFilter2(PostProcessing::DataMap& cplData, DataValues& xUpdate);
    void computeQNUpdate_PODFilter(PostProcessing::DataMap& cplData, DataValues& xUpdate);
 

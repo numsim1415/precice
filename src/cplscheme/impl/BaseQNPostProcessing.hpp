@@ -141,6 +141,7 @@ protected:
    typedef tarch::la::DynamicMatrix<double> Matrix;
 
    const std::string QR1_FILTER;
+   const std::string QR11_FILTER;
    const std::string QR2_FILTER;
    const std::string POD_FILTER;
 

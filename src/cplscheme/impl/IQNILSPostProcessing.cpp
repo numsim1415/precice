@@ -7,6 +7,7 @@
 #include "tarch/la/GramSchmidt.h"
 #include "tarch/la/MatrixVectorOperations.h"
 #include "tarch/la/TransposedMatrix.h"
+#include "tarch/la/MatrixOperations.h"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Dimensions.hpp"
@@ -295,6 +296,75 @@ void IQNILSPostProcessing::computeQNUpdate_PODFilter
 
 }
 
+void IQNILSPostProcessing::computeQNUpdate_QRFilter1_prime
+(PostProcessing::DataMap& cplData, DataValues& xUpdate)
+{
+	preciceTrace("computeQNUpdate_QRFilter1()");
+	using namespace tarch::la;
+
+	// Calculate QR decomposition of matrix V and solve Rc = -Qr
+	DataValues c;
+	bool linearDependence = true;
+	while (linearDependence) {
+
+		DataMatrix Vcopy(_matrixV);
+		DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
+		DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
+		modifiedGramSchmidt(Vcopy, Q, R);
+		preciceDebug("   Compute Newton factors");
+		linearDependence = false;
+
+		// compute Frobenius norm of R
+		double frobNorm_R = frobeniusNorm(R);
+
+		if (_matrixV.cols() > 1) {
+			for (int i = 0; i < _matrixV.cols(); i++) {
+				if (std::fabs(R(i, i)) < _singularityLimit * frobNorm_R) {
+
+					preciceDebug("   (QR1-Filter) t="<<tSteps<<", k="<<its
+							    <<" | deleting column " << i );
+					_infostream <<"   (QR1-Filter) t="<<tSteps<<", k="<<its
+						    	<<" | deleting column " << i << std::flush<<std::endl;
+
+					linearDependence = true;
+					removeMatrixColumn(i);
+				}
+			}
+		}
+		if (not linearDependence) {
+
+			preciceDebug("   Apply Newton factors");
+
+			DataValues b(Q.cols(), 0.0);
+			multiply(transpose(Q), _residuals, b);
+			b *= -1.0; // = -Qr
+
+			assertion1(c.size() == 0, c.size());
+			c.append(b.size(), 0.0);
+			backSubstitution(R, b, c);
+
+			multiply(_matrixW, c, xUpdate);
+
+			preciceDebug("c = " << __c);
+
+			// Perform QN relaxation for secondary data
+			foreach (int id, _secondaryDataIDs){
+				PtrCouplingData data = cplData[id];
+				DataValues& values = *(data->values);
+				assertion2(_secondaryMatricesW[id].cols() == c.size(),
+						_secondaryMatricesW[id].cols(), c.size());
+				tarch::la::multiply(_secondaryMatricesW[id], c, values);
+				assertion2(values.size() == data->oldValues.column(0).size(),
+						values.size(), data->oldValues.column(0).size());
+				values += data->oldValues.column(0);
+				assertion2(values.size() == _secondaryResiduals[id].size(),
+						values.size(), _secondaryResiduals[id].size());
+				values += _secondaryResiduals[id];
+			}
+		}
+	}
+}
+
 void IQNILSPostProcessing::computeQNUpdate_QRFilter1
 (PostProcessing::DataMap& cplData, DataValues& xUpdate)
 {
@@ -333,26 +403,6 @@ void IQNILSPostProcessing::computeQNUpdate_QRFilter1
 		if (not linearDependence) {
 
 			preciceDebug("   Apply Newton factors");
-
-			// --------- QN factors with modifiedGramSchmidt ---
-			/*
-			 DataMatrix Vcopy(_matrixV);
-			 DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
-			 DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
-			 modifiedGramSchmidt(Vcopy, Q, R);
-
-			 DataValues b(Q.cols(), 0.0);
-			 multiply(transpose(Q), _residuals, b); // = Qr
-			 b *= -1.0; // = -Qr
-			 assertion1(c.size() == 0, c.size());
-			 c.append(b.size(), 0.0);
-
-			 backSubstitution(R, b, c);
-
-			 DataValues update(_residuals.size(), 0.0);
-			 multiply(_matrixW, c, update); // = Wc
-			 */
-
 			// ---------- QN factors with updatedQR -----------
 			Matrix __Qt(_matrixV.cols(), _matrixV.rows(), 0.0);
 
@@ -514,6 +564,9 @@ void IQNILSPostProcessing::computeQNUpdate
     if(_filter == QR1_FILTER)
     {
     	computeQNUpdate_QRFilter1(cplData, xUpdate);
+    }else if(_filter == QR11_FILTER)
+    {
+    	computeQNUpdate_QRFilter1_prime(cplData, xUpdate);
     }else if(_filter == QR2_FILTER)
     {
     	computeQNUpdate_QRFilter2(cplData, xUpdate);

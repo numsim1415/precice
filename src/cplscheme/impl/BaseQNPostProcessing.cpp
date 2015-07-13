@@ -40,6 +40,7 @@ BaseQNPostProcessing:: BaseQNPostProcessing
 :
   PostProcessing(),
   QR1_FILTER("QR1-filter"),
+  QR11_FILTER("QR11-filter"),
   QR2_FILTER("QR2-filter"),
   POD_FILTER("POD-filter"),
   _initialRelaxation(initialRelaxation),

@@ -384,6 +384,7 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
 	tagFilter.setDocumentation("Type of filtering technique that is used to "
 			"maintain good conditioning in the least-squares system. Possible filters:\n"
 			"  QR1-filter: updateQR-dec with test R(i,i) < eps\n"
+			"  QR11-filter: en-block QR-dec with test R(i,i) < eps * |R|\n"
 			"  QR2-filter: en-block Gram-Schmidt with test |v_orth| < eps * |v|\n"
 			"  POD-filter: svd of V=USX^T, truncation, en-block Gram-Schmidt of VX");
 	tag.addSubtag(tagFilter);
