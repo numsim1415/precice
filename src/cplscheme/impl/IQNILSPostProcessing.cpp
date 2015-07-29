@@ -345,7 +345,7 @@ void IQNILSPostProcessing::computeQNUpdate_QRFilter1_prime
 
 			multiply(_matrixW, c, xUpdate);
 
-			preciceDebug("c = " << __c);
+			preciceDebug("c = " << c);
 
 			// Perform QN relaxation for secondary data
 			foreach (int id, _secondaryDataIDs){
