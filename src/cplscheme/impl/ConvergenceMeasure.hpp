@@ -37,7 +37,7 @@ public:
   /**
    * @brief To be called when a new meas. series (iteration process) starts.
    */
-  virtual void newMeasurementSeries() =0;
+  virtual void newMeasurementSeries(const utils::DynVector& oldValues) =0;
 
   /**
    * @brief Performs convergence measurement.

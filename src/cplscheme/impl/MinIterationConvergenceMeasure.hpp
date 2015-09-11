@@ -20,7 +20,7 @@ public:
 
    virtual ~MinIterationConvergenceMeasure() {}
 
-   virtual void newMeasurementSeries();
+   virtual void newMeasurementSeries(const utils::DynVector& oldValues);
 
    virtual void measure (
       const utils::DynVector & oldValues,

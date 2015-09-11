@@ -51,10 +51,22 @@ public:
   static double l2norm(const EigenVector& vec);
 
   /**
+   * @brief the wrms norm of a vector is calculated on distributed data.
+   */
+  static double wrmsNorm(const DynVector& vec, const DynVector& weights);
+  static double wrmsNorm(const EigenVector& vec, const EigenVector& weights);
+
+  /**
    * @brief the dot product of 2 vectors is calculated on distributed data.
    */
   static double dot(const DynVector& vec1, const DynVector& vec2);
   static double dot(const EigenVector& vec1, const EigenVector& vec2);
+
+  /**
+   * @brief the wrms dot product of 2 vectors is calculated on distributed data.
+   */
+  //static double wrmsDot(const DynVector& vec1, const DynVector& vec2, const DynVector& weights);
+  //static double wrmsDot(const EigenVector& vec1, const EigenVector& vec2, const EigenVector& weights);
 
   static void reset();
 

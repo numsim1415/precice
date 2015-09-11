@@ -31,7 +31,7 @@ void MinIterationConvergenceMeasureTest:: run ()
     utils::DynVector emptyValues; // No values needed for min-iter
 
     for ( int iSeries=0; iSeries < 3; iSeries++ ) {
-      measure.newMeasurementSeries ();
+      measure.newMeasurementSeries (emptyValues);
       for ( int iMeasurement=1; iMeasurement < 10; iMeasurement++ ) {
         measure.measure ( emptyValues, emptyValues );
         if ( iMeasurement < 5 ) {

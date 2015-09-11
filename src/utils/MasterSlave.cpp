@@ -107,6 +107,37 @@ double MasterSlave:: l2norm(const EigenVector& vec)
 }
 
 
+double MasterSlave:: wrmsNorm(const DynVector& vec, const DynVector& weights)
+{
+  preciceTrace("wrmsNorm()");
+
+  preciceCheck(not _masterMode and not _slaveMode, "wrmsNorm", "Not yet supported" );
+
+  double sum = 0.0;
+
+  for(int i=0; i<vec.size(); i++){
+    sum += weights[i]*weights[i]*vec[i]*vec[i];
+  }
+
+  return sqrt(sum/vec.size());
+}
+
+double MasterSlave:: wrmsNorm(const EigenVector& vec, const EigenVector& weights)
+{
+  preciceTrace("wrmsNorm()");
+
+  preciceCheck(not _masterMode and not _slaveMode, "wrmsNorm", "Not yet supported" );
+
+  double sum = 0.0;
+
+  for(int i=0; i<vec.size(); i++){
+    sum += weights[i]*weights[i]*vec[i]*vec[i];
+  }
+
+  return sqrt(sum/vec.size());
+}
+
+
 double MasterSlave:: dot(const DynVector& vec1, const DynVector& vec2)
 {
   preciceTrace("dot()");

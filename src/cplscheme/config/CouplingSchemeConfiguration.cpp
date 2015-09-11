@@ -12,6 +12,7 @@
 #include "cplscheme/impl/RelativeConvergenceMeasure.hpp"
 #include "cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp"
 #include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
+#include "cplscheme/impl/WRMSConvergenceMeasure.hpp"
 #include "cplscheme/impl/PostProcessing.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
@@ -52,6 +53,7 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
   TAG_REL_CONV_MEASURE("relative-convergence-measure"),
   TAG_RES_REL_CONV_MEASURE("residual-relative-convergence-measure"),
   TAG_MIN_ITER_CONV_MEASURE("min-iteration-convergence-measure"),
+  TAG_WRMS_CONV_MEASURE("wrms-convergence-measure"),
   TAG_MAX_ITERATIONS("max-iterations"),
   TAG_CHECKPOINT("checkpoint"),
   TAG_EXTRAPOLATION("extrapolation-order"),
@@ -66,6 +68,8 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
   ATTR_VALID_DIGITS("valid-digits"),
   ATTR_METHOD("method"),
   ATTR_LIMIT("limit"),
+  ATTR_RELTOL("reltol"),
+  ATTR_ABSTOL("abstol"),
   ATTR_MIN_ITERATIONS("min-iterations"),
   ATTR_NAME("name"),
   ATTR_TIMESTEP_INTERVAL("timestep-interval"),
@@ -250,6 +254,16 @@ void CouplingSchemeConfiguration:: xmlTagCallback
         || _config.type == VALUE_MULTI);
     addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices);
   }
+  else if ( tag.getName() == TAG_WRMS_CONV_MEASURE ) {
+    std::string dataName = tag.getStringAttributeValue(ATTR_DATA);
+    std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
+    double reltol = tag.getDoubleAttributeValue(ATTR_RELTOL);
+    double abstol = tag.getDoubleAttributeValue(ATTR_ABSTOL);
+    bool suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT
+        || _config.type == VALUE_MULTI);
+    addWRMSConvergenceMeasure(dataName, meshName, reltol, abstol, suffices);
+  }
   else if (tag.getName() == TAG_EXCHANGE){
     assertion(_config.type != VALUE_UNCOUPLED);
     std::string nameData = tag.getStringAttributeValue(ATTR_DATA);
@@ -421,6 +435,7 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
     addTagRelativeConvergenceMeasure(tag);
     addTagResidualRelativeConvergenceMeasure(tag);
     addTagMinIterationConvergenceMeasure(tag);
+    addTagWRMSConvergenceMeasure(tag);
     addTagMaxIterations(tag);
     addTagExtrapolation(tag);
     addTagPostProcessing(tag);
@@ -432,6 +447,7 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
     addTagRelativeConvergenceMeasure(tag);
     addTagResidualRelativeConvergenceMeasure(tag);
     addTagMinIterationConvergenceMeasure(tag);
+    addTagWRMSConvergenceMeasure(tag);
     addTagMaxIterations(tag);
     addTagExtrapolation(tag);
     addTagPostProcessing(tag);
@@ -443,6 +459,7 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
     addTagRelativeConvergenceMeasure(tag);
     addTagResidualRelativeConvergenceMeasure(tag);
     addTagMinIterationConvergenceMeasure(tag);
+    addTagWRMSConvergenceMeasure(tag);
     addTagMaxIterations(tag);
     addTagExtrapolation(tag);
     addTagPostProcessing(tag);
@@ -595,6 +612,20 @@ void CouplingSchemeConfiguration:: addTagMinIterationConvergenceMeasure
   tag.addSubtag(tagMinIterationConvMeasure);
 }
 
+void CouplingSchemeConfiguration:: addTagWRMSConvergenceMeasure
+(
+  utils::XMLTag& tag )
+{
+  utils::XMLTag tagWRMSConvMeasure (*this,
+    TAG_WRMS_CONV_MEASURE, utils::XMLTag::OCCUR_ARBITRARY );
+  addBaseAttributesTagConvergenceMeasure(tagWRMSConvMeasure);
+  utils::XMLAttribute<double> attrReltol(ATTR_RELTOL);
+  tagWRMSConvMeasure.addAttribute(attrReltol);
+  utils::XMLAttribute<double> attrAbstol(ATTR_ABSTOL);
+  tagWRMSConvMeasure.addAttribute(attrAbstol);
+  tag.addSubtag(tagWRMSConvMeasure);
+}
+
 void CouplingSchemeConfiguration:: addBaseAttributesTagConvergenceMeasure
 (
   utils::XMLTag& tag )
@@ -697,6 +728,21 @@ void CouplingSchemeConfiguration:: addMinIterationConvergenceMeasure
   preciceTrace( "addMinIterationConvergenceMeasure()");
   impl::PtrConvergenceMeasure measure (
       new impl::MinIterationConvergenceMeasure(minIterations) );
+  int dataID = getData(dataName, meshName)->getID();
+  _config.convMeasures.push_back(boost::make_tuple(dataID, suffices, meshName, measure));
+}
+
+void CouplingSchemeConfiguration:: addWRMSConvergenceMeasure
+(
+  const std::string& dataName,
+  const std::string& meshName,
+  double             reltol,
+  double             abstol,
+  bool               suffices )
+{
+  preciceTrace( "addWRMSConvergenceMeasure()");
+  impl::PtrConvergenceMeasure measure (
+      new impl::WRMSConvergenceMeasure(reltol, abstol) );
   int dataID = getData(dataName, meshName)->getID();
   _config.convMeasures.push_back(boost::make_tuple(dataID, suffices, meshName, measure));
 }

@@ -52,7 +52,7 @@ public:
 
    virtual ~ResidualRelativeConvergenceMeasure () {};
 
-   virtual void newMeasurementSeries ()
+   virtual void newMeasurementSeries (const utils::DynVector& oldValues)
    {
       _isConvergence = false;
       _isFirstIteration = true;

@@ -21,7 +21,7 @@ MinIterationConvergenceMeasure:: MinIterationConvergenceMeasure
   _isConvergence(false)
 {}
 
-void MinIterationConvergenceMeasure:: newMeasurementSeries()
+void MinIterationConvergenceMeasure:: newMeasurementSeries(const utils::DynVector& oldValues)
 {
   _currentIteration = 0;
   _isConvergence = false;

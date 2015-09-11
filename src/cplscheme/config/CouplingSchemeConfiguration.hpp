@@ -110,6 +110,7 @@ private:
   const std::string TAG_REL_CONV_MEASURE;
   const std::string TAG_RES_REL_CONV_MEASURE;
   const std::string TAG_MIN_ITER_CONV_MEASURE;
+  const std::string TAG_WRMS_CONV_MEASURE;
   const std::string TAG_MAX_ITERATIONS;
   const std::string TAG_CHECKPOINT;
   const std::string TAG_EXTRAPOLATION;
@@ -125,6 +126,8 @@ private:
   const std::string ATTR_VALID_DIGITS;
   const std::string ATTR_METHOD;
   const std::string ATTR_LIMIT;
+  const std::string ATTR_RELTOL;
+  const std::string ATTR_ABSTOL;
   const std::string ATTR_MIN_ITERATIONS;
   const std::string ATTR_NAME;
   const std::string ATTR_TIMESTEP_INTERVAL;
@@ -220,6 +223,8 @@ private:
 
   void addTagMinIterationConvergenceMeasure ( utils::XMLTag& tag );
 
+  void addTagWRMSConvergenceMeasure ( utils::XMLTag& tag );
+
   void addBaseAttributesTagConvergenceMeasure ( utils::XMLTag& tag );
 
   void addTagMaxIterations ( utils::XMLTag& tag );
@@ -250,6 +255,13 @@ private:
     const std::string & dataName,
     const std::string & meshName,
     int                 minIterations,
+    bool                suffices );
+
+  void addWRMSConvergenceMeasure (
+    const std::string & dataName,
+    const std::string & meshName,
+    double              relTol,
+    double              absTol,
     bool                suffices );
 
   mesh::PtrData getData (

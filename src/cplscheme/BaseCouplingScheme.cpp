@@ -686,6 +686,7 @@ void BaseCouplingScheme::setupConvergenceMeasures()
       assertion(convMeasure.data != nullptr);
     }
   }
+  newConvergenceMeasurements(); //to initialize convergence measure, e.g. the weights for wrms
 }
 
 void BaseCouplingScheme::newConvergenceMeasurements()
@@ -693,7 +694,8 @@ void BaseCouplingScheme::newConvergenceMeasurements()
   preciceTrace("newConvergenceMeasurements()");
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     assertion(convMeasure.measure.get() != nullptr);
-    convMeasure.measure->newMeasurementSeries();
+    assertion(convMeasure.data->values != nullptr);
+    convMeasure.measure->newMeasurementSeries(*convMeasure.data->values);
   }
 }
 

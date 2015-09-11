@@ -53,7 +53,7 @@ public:
 
    virtual ~RelativeConvergenceMeasure () {};
 
-   virtual void newMeasurementSeries ()
+   virtual void newMeasurementSeries (const utils::DynVector& oldValues)
    {
       _isConvergence = false;
    }
