@@ -29,6 +29,8 @@ tarch::logging::Log ParallelMatrixOperations::
 
 
 ParallelMatrixOperations::ParallelMatrixOperations() :
+_infostream(),
+_fstream_set(false),
 _cyclicCommLeft(nullptr),
 _cyclicCommRight(nullptr)
 {}
@@ -46,6 +48,12 @@ void ParallelMatrixOperations::initialize(
 		assertion(_cyclicCommLeft.get() != NULL); assertion(_cyclicCommLeft->isConnected());
 		assertion(_cyclicCommRight.get() != NULL); assertion(_cyclicCommRight->isConnected());
 	}
+}
+
+void ParallelMatrixOperations::setfstream(std::fstream* stream)
+{
+  _infostream = stream;
+  _fstream_set = true;
 }
 
 void ParallelMatrixOperations::multiply

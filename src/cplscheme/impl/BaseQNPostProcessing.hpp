@@ -156,6 +156,9 @@ public:
 
 protected:
 
+   /// @brief write some debug/post processing info to file
+    std::fstream _infostream;
+
    typedef tarch::la::DynamicVector<double> DataValues;
    typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
    typedef tarch::la::DynamicMatrix<double> Matrix;
@@ -320,9 +323,6 @@ private:
   /// @ brief additional debugging info, is not important for computation:
   int its,tSteps;
   int deletedColumns;
-
-  /// @brief write some debug/post processing info to file
-  std::fstream _infostream;
 
 
 };

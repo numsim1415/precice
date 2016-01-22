@@ -18,6 +18,7 @@
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
+#include <fstream>
 #include "Eigen/Dense"
 
 namespace precice {
@@ -156,10 +157,17 @@ public:
    }
 
 
+   // @brief optional file-stream for logging output
+   void setfstream(std::fstream* stream);
+
 private:
 
    // @brief Logging device.
    static tarch::logging::Log _log;
+
+   // @brief optional infostream that writes information to file
+   std::fstream* _infostream;
+   bool _fstream_set;
 
    // @brief multiplies matrices based on a dot-product computation with a rectangular result matrix
    void _multiplyNM(
@@ -199,6 +207,7 @@ private:
 		 * result: 		local: (n_global x n_local) global: (n_global x n_global)
 		 * -----------------------------------------------------------------------
 		 */
+
 
 		assertion2(leftMatrix.cols() == q, leftMatrix.cols(), q);
 		assertion2(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
@@ -240,35 +249,58 @@ private:
 			if(requestSend != NULL) requestSend->wait();
 			if(requestRcv != NULL)  requestRcv->wait();
 
+			int sourceProc = (utils::MasterSlave::_rank - cycle < 0) ?
+			          utils::MasterSlave::_size + (utils::MasterSlave::_rank - cycle) : utils::MasterSlave::_rank - cycle;
+
+
+//			if (_fstream_set) (*_infostream)<<" -- cycle "<<cycle<<" --"<<std::endl;
+//			if (_fstream_set) (*_infostream)<<"norm Wtil("<<sourceProc<<","<<utils::MasterSlave::_rank<<"): "<<leftMatrix_rcv.norm()<<" (rcv), size: ("<<leftMatrix_rcv.rows()<<","<<leftMatrix_rcv.cols()<<") = "<<leftMatrix_rcv.size()<<std::endl;
+//			if (_fstream_set) (*_infostream)<<"rcv W_til("<<sourceProc<<","<<utils::MasterSlave::_rank<<"): "<<leftMatrix_rcv.bottomRows(5)<<std::endl;
 			// leftMatrix (leftMatrix_rcv) is available - needed for local multiplication and hand over to next proc
 			EigenMatrix leftMatrix_copy(leftMatrix_rcv);
+			//EigenMatrix leftMatrix_copy2(leftMatrix_rcv);
+
+	//		EigenMatrix leftMatrix_copy(leftMatrix_rcv.rows(), leftMatrix_rcv.cols());
+	//	  EigenMatrix leftMatrix_copy2(leftMatrix_rcv.rows(), leftMatrix_rcv.cols());
+	//	  for (int i = 0; i < leftMatrix_rcv.rows(); i++)
+	//	    for (int j = 0; j < leftMatrix_rcv.cols(); j++){
+	//	      leftMatrix_copy(i,j) = leftMatrix_rcv(i,j);
+	//	      leftMatrix_copy2(i,j) = leftMatrix_rcv(i,j);
+	//	    }
 
 			// initiate async send to hand over leftMatrix (W_til) to the next proc (this data will be needed in the next cycle)    dim: n_local x cols
 			if(cycle < utils::MasterSlave::_size-1){
 			  if(leftMatrix_copy.size() > 0)
 				  requestSend = _cyclicCommRight->aSend(leftMatrix_copy.data(), leftMatrix_copy.size(), 0);
+//			  if (_fstream_set) (*_infostream)<<"norm Wtil("<<sourceProc<<","<<utils::MasterSlave::_rank<<"): "<<leftMatrix_copy.norm()<<" (send), size: ("<<leftMatrix_copy.rows()<<","<<leftMatrix_copy.cols()<<")"<<std::endl;
+//			  if (_fstream_set) (*_infostream)<<"send W_til("<<sourceProc<<","<<utils::MasterSlave::_rank<<"): "<<leftMatrix_copy.bottomRows(5)<<std::endl;
 			}
 
 			// compute proc that owned leftMatrix_rcv (Wtil_rcv) at the very beginning for each cylce
 			int sourceProc_nextCycle = (utils::MasterSlave::_rank - (cycle+1) < 0) ?
 				  utils::MasterSlave::_size + (utils::MasterSlave::_rank - (cycle+1)) : utils::MasterSlave::_rank - (cycle+1);
 
-			int sourceProc = (utils::MasterSlave::_rank - cycle < 0) ?
+			sourceProc = (utils::MasterSlave::_rank - cycle < 0) ?
 				  utils::MasterSlave::_size + (utils::MasterSlave::_rank - cycle) : utils::MasterSlave::_rank - cycle;
 
 			int rows_rcv_nextCycle = (sourceProc_nextCycle > 0) ? offsets[sourceProc_nextCycle+1] - offsets[sourceProc_nextCycle] : offsets[1];
 			rows_rcv = (sourceProc > 0) ? offsets[sourceProc+1] - offsets[sourceProc] : offsets[1];
-			leftMatrix_rcv = EigenMatrix::Zero(rows_rcv_nextCycle, q);
-
 
 			// initiate asynchronous receive operation for leftMatrix (W_til) from previous processor --> W_til (this data is needed in the next cycle)
 			if(cycle < utils::MasterSlave::_size-1){
+	//		  if (_fstream_set) (*_infostream)<<"..norm leftM, prev: "<<leftMatrix_rcv.norm()<<", size: "<<leftMatrix_rcv.size()<<std::endl;
+        leftMatrix_rcv = EigenMatrix(rows_rcv_nextCycle, q);
+  //      leftMatrix_rcv = (leftMatrix_rcv *  0.0).eval();
+ //       if (_fstream_set) (*_infostream)<<"..norm leftM, post: "<<leftMatrix_rcv.norm()<<", size: "<<leftMatrix_rcv.size()<<std::endl;
 			  if(leftMatrix_rcv.size() > 0) // only receive data, if data has been sent
 				  requestRcv = _cyclicCommLeft->aReceive(leftMatrix_rcv.data(), leftMatrix_rcv.size(), 0);
 			}
 
 			// compute block with new local data
+			if(requestSend != NULL) requestSend->wait();
 			EigenMatrix block(rows_rcv, rightMatrix.cols());
+		//	if (_fstream_set) (*_infostream)<<"block size: ("<<block.rows()<<","<<block.cols()<<"), cycle:"<<cycle<<"  (1)"<<std::endl;
+		//	if (_fstream_set) (*_infostream)<<"norm Wtil("<<sourceProc<<","<<utils::MasterSlave::_rank<<"): "<<leftMatrix_copy2.norm()<<" (mult)"<<std::endl;
 			block.noalias() = leftMatrix_copy * rightMatrix;
 
 			// set block at corresponding index in J_inv
@@ -276,6 +308,7 @@ private:
 			// note: the direction and ordering of the cyclic sending operation is chosen s.t. the computed block is
 			//       local on the current processor (in J_inv).
 			off = offsets[sourceProc];
+	//		if (_fstream_set) (*_infostream)<<"norm block("<<sourceProc<<","<<utils::MasterSlave::_rank<<"): "<<block.norm()<<", cycle:"<<cycle<<" "<<std::endl;
 			assertion2(result.cols() == block.cols(), result.cols(), block.cols());
 			result.block(off, 0, block.rows(), block.cols()) = block;
 		}

@@ -86,6 +86,9 @@ void MVQNPostProcessing:: initialize
 {
   preciceTrace(__func__);
   Event e("MVQNPostProcessing::initialize()", true, true); // time measurement, barrier
+
+  _parMatrixOps.setfstream(&_infostream);
+
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
   
@@ -189,13 +192,13 @@ void MVQNPostProcessing::computeQNUpdate
      */
 
   Event ePrecond_1("precond J (1)", true, true); // time measurement, barrier
-  _preconditioner->apply(_oldInvJacobian,false);
-  _preconditioner->revert(_oldInvJacobian,true);
+  //_preconditioner->apply(_oldInvJacobian,false);
+  //_preconditioner->revert(_oldInvJacobian,true);
   ePrecond_1.stop();
   computeNewtonFactorsUpdatedQRDecomposition(cplData, xUpdate);
   Event ePrecond_2("precond J (2)", true, true); // time measurement, barrier
-  _preconditioner->revert(_oldInvJacobian,false);
-  _preconditioner->apply(_oldInvJacobian,true);
+  //_preconditioner->revert(_oldInvJacobian,false);
+  //_preconditioner->apply(_oldInvJacobian,true);
   ePrecond_2.stop();
 }
 
@@ -249,6 +252,11 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		yVec = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(Qrow);
 		Z.col(i) = yVec;
 	}
+
+	_infostream<<"norm Z: "<<Z.norm()<<" (1)"<<std::endl;
+	_infostream<<"norm V: "<<V.norm()<<" (1)"<<std::endl;
+	_infostream<<"norm W: "<<W.norm()<<" (1)"<<std::endl;
+
 	e_qr.stop();
 
 
@@ -271,6 +279,9 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	W_til *= -1.;
 	W_til = W_til + W;
 
+
+	_infostream<<"norm W_til: "<<W_til.norm()<<" (1)"<<std::endl;
+
 	e_WtilV.stop();
 
 	/**
@@ -287,8 +298,11 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	_parMatrixOps.multiply(W_til, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
 	e_WtilV.stop();
 
+	_infostream<<"norm J: "<<_invJacobian.norm()<<" (1)"<<std::endl;
+
 	// update Jacobian
 	_invJacobian = _invJacobian + _oldInvJacobian;
+	_infostream<<"norm J: "<<_invJacobian.norm()<<" (2)"<<std::endl;
 
 	/**
  	 *  (4) solve delta_x = - J_inv * res
@@ -296,9 +310,11 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	Eigen::VectorXd res_tilde(_residuals.size());
   Eigen::VectorXd xUp(_residuals.size());
   for(int i = 0; i < res_tilde.size(); i++)
-    res_tilde(i) = _residuals(i);
+    res_tilde(i) = - _residuals(i);
 
-	res_tilde *= -1.;
+  _infostream<<"norm res_til: "<<res_tilde.norm()<<" (0)"<<std::endl;
+  _infostream<<"_dimOffset: "<<_dimOffsets<<std::endl;
+  _infostream<<"LS rows: "<<getLSSystemRows()<<", LS cols: "<<getLSSystemCols()<<std::endl;
 
 	Event e_up("compute update = J*(-res)", true, true); // time measurement, barrier
 	// multiply J_inv * (-res) = x_Update of dimension: (n x n) * (n x 1) = (n x 1),
@@ -317,8 +333,8 @@ void MVQNPostProcessing:: specializedIterationsConverged
 {
   // store inverse Jacobian from last time step
   _oldInvJacobian = _invJacobian;
-  _preconditioner->revert(_oldInvJacobian,false);
-  _preconditioner->apply(_oldInvJacobian,true);
+  //_preconditioner->revert(_oldInvJacobian,false);
+  //_preconditioner->apply(_oldInvJacobian,true);
 }
 
 }}} // namespace precice, cplscheme, impl
