@@ -58,6 +58,7 @@ private:
     */
    void testParallelMatrixMatrixOp_tarch();
    void testParallelMatrixMatrixOp_Eigen();
+   void testLargeParMatMat_Eigen();
 
    void testParVectorOperations();
 

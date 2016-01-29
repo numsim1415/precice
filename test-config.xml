@@ -19,7 +19,10 @@
     <log-filter target="debug" component="precice::cplscheme::impl::QRFactorization" switch="off"/>
     <log-filter target="debug" component="precice::com::tests" switch="on"/>
     <log-filter target="debug" component="precice::cplscheme::tests::ParallelMatrixOperationsTest" switch="on" />
-    
+    <log-filter target="debug" component="precice::cplscheme::tests::ParallelImplicitCouplingSchemeTest" switch="on" />
+    <log-filter target="debug" component="precice::cplscheme::tests::PostProcessingMasterSlaveTest" switch="on" />
+    <log-filter target="debug" component="precice::cplscheme::impl::ParallelMatrixOperations" switch="on" />
+
     <!-- <log-filter target=""      component=""      switch="on"/> -->
     <log-filter target="info"  component="tarch" switch="on"/> 
     

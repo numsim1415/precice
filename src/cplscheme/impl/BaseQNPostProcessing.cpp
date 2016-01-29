@@ -297,8 +297,8 @@ void BaseQNPostProcessing::updateDifferenceMatrices
         // QR decomposition and updae decomposition
 
         //apply scaling here
-        _infostream<<"norm deltaR: "<<tarch::la::norm2(deltaR)<<std::endl;
- //       _preconditioner->apply(deltaR);
+        if (deltaR.size() > 0) _infostream<<"norm deltaR: "<<tarch::la::norm2(deltaR)<<std::endl;
+        _preconditioner->apply(deltaR);
         _qrV.pushFront(deltaR);
 
         _matrixCols.front()++;
@@ -309,8 +309,8 @@ void BaseQNPostProcessing::updateDifferenceMatrices
 
         // inserts column deltaR at pos. 0 to the QR decomposition and deletes the last column
         // the QR decomposition of V is updated
-        _infostream<<"norm deltaR: "<<tarch::la::norm2(deltaR)<<std::endl;
- //       _preconditioner->apply(deltaR);
+        if (deltaR.size() > 0) _infostream<<"norm deltaR: "<<tarch::la::norm2(deltaR)<<std::endl;
+        _preconditioner->apply(deltaR);
         _qrV.pushFront(deltaR);
         _qrV.popBack();
 
@@ -351,7 +351,7 @@ void BaseQNPostProcessing::performPostProcessing
   _infostream<<"\n -- iteration "<<its<<" --"<<std::endl;
   // scale data values (and secondary data values)
   concatenateCouplingData(cplData);
-  _infostream<<"norm cplData: "<<tarch::la::norm2(_values)<<" (1)"<<std::endl;
+  if (_values.size() > 0) _infostream<<"norm cplData: "<<tarch::la::norm2(_values)<<" (1)"<<std::endl;
 
   /** update the difference matrices V,W  includes:
    * scaling of values
@@ -395,8 +395,9 @@ void BaseQNPostProcessing::performPostProcessing
       // after the first iteration and the matrix data from time step t-2 has to be used
 
       // TODO: _matrixV needs to be preconditioned...
-      // _preconditioner.apply(_matrixV);
+       _preconditioner->apply(_matrixV);
       _qrV.reset(_matrixV, getLSSystemRows());
+      _preconditioner->revert(_matrixV);
       _infostream<<"restore V, W matrices from backup, as previous time step converged within on iteration, it"<<its<<", tStep: "<<tSteps<<std::endl;
     }
 
@@ -404,11 +405,11 @@ void BaseQNPostProcessing::performPostProcessing
     assertion2(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
 
 
-    _infostream<<"norm residual: "<<tarch::la::norm2(_residuals)<<" (pre designS)"<<"    |    ";
+    if (_residuals.size() > 0) _infostream<<"norm residual: "<<tarch::la::norm2(_residuals)<<" (pre designS)"<<"    |    ";
     for (int i = 0; i < _designSpecification.size(); i++)
           _residuals(i) -= _designSpecification(i);
 
-    _infostream<<tarch::la::norm2(_residuals)<<" (post designS)"<<std::endl;
+    if (_residuals.size() > 0) _infostream<<tarch::la::norm2(_residuals)<<" (post designS)"<<std::endl;
 
     /**
      *  === update and apply preconditioner ===
@@ -418,20 +419,20 @@ void BaseQNPostProcessing::performPostProcessing
      *       minus the design specification of the optimization problem (!= null if MM is used)
      */
     Event e_applyPrecond("applyPreconditioner", true, true); // time measurement, barrier
-//    _preconditioner->update(false, _values, _residuals);
+    _preconditioner->update(false, _values, _residuals);
     // TODO: evaluate whether the pure residual should be used for updating the preconditioner or residual - design specification
 
 
-//    _preconditioner->apply(_residuals);
-//    _preconditioner->apply(_matrixV);
-//    _preconditioner->apply(_matrixW);
+    _preconditioner->apply(_residuals);
+    _preconditioner->apply(_matrixV);
+    _preconditioner->apply(_matrixW);
 
-//    if(_preconditioner->requireNewQR()){
-//      if(not (_filter==PostProcessing::QR2FILTER)){ //for QR2 filter, there is no need to do this twice
-//        _qrV.reset(_matrixV, getLSSystemRows());
-//      }
-//      _preconditioner->newQRfulfilled();
-//    }
+    if(_preconditioner->requireNewQR()){
+      if(not (_filter==PostProcessing::QR2FILTER)){ //for QR2 filter, there is no need to do this twice
+        _qrV.reset(_matrixV, getLSSystemRows());
+      }
+      _preconditioner->newQRfulfilled();
+    }
     e_applyPrecond.stop();
 
     // apply the configured filter to the LS system
@@ -443,16 +444,16 @@ void BaseQNPostProcessing::performPostProcessing
     DataValues xUpdate(_residuals.size(), 0.0);
     computeQNUpdate(cplData, xUpdate);
 
-    _infostream<<"norm update: "<<tarch::la::norm2(xUpdate)<<std::endl;
+    if (xUpdate.size() > 0) _infostream<<"norm update: "<<tarch::la::norm2(xUpdate)<<std::endl;
 
     Event e_revertPrecond("revertPreconditioner", true, true); // time measurement, barrier
-//    _preconditioner->revert(xUpdate); //to compensate the W scaling
- //   _preconditioner->revert(_matrixW);
- //   _preconditioner->revert(_matrixV);
+    _preconditioner->revert(xUpdate); //to compensate the W scaling
+    _preconditioner->revert(_matrixW);
+    _preconditioner->revert(_matrixV);
 
 
-    _infostream<<"norm residual: "<<tarch::la::norm2(_residuals)<<std::endl;
-//    _preconditioner->revert(_residuals);
+    if (_residuals.size() > 0) _infostream<<"norm residual: "<<tarch::la::norm2(_residuals)<<std::endl;
+    _preconditioner->revert(_residuals);
 //    _infostream<<tarch::la::norm2(_residuals)<<" (post revert)"<<std::endl;
 
     e_revertPrecond.stop();
@@ -465,7 +466,7 @@ void BaseQNPostProcessing::performPostProcessing
     _values += _residuals; // = x^k + delta_x + r^k         note: residuals are _residuals - _designSpecifiaction at this point.
 //    _values -= q; // = x^k + delta_x + r^k - q^k
 
-    _infostream<<"norm cplData: "<<tarch::la::norm2(_values)<<" (2)"<<std::endl;
+    if (_values.size() > 0) _infostream<<"norm cplData: "<<tarch::la::norm2(_values)<<" (2)"<<std::endl;
 
     // TODO: maybe add design specification. Though, residuals are overwritten in the next iteration this would be a clearer and nicer code
 
@@ -501,7 +502,7 @@ void BaseQNPostProcessing::performPostProcessing
 
   splitCouplingData(cplData);
 
-  _infostream<<"norm cplData: "<<tarch::la::norm2(_values)<<" (3)"<<std::endl;
+  if (_values.size() > 0) _infostream<<"norm cplData: "<<tarch::la::norm2(_values)<<" (3)"<<std::endl;
 
   // number of iterations (usually equals number of columns in LS-system)
   its++;
@@ -613,7 +614,7 @@ void BaseQNPostProcessing::iterationsConverged
   for (int i = 0; i < _designSpecification.size(); i++)
         _residuals(i) -= _designSpecification(i);
 
- // _preconditioner->update(true, _values, _residuals);
+  _preconditioner->update(true, _values, _residuals);
 
   // TODO: maybe add design specification. Though, residuals are overwritten in the next iteration this would be a clearer and nicer code
 

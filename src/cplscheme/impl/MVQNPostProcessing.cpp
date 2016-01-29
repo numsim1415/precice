@@ -192,13 +192,13 @@ void MVQNPostProcessing::computeQNUpdate
      */
 
   Event ePrecond_1("precond J (1)", true, true); // time measurement, barrier
-  //_preconditioner->apply(_oldInvJacobian,false);
-  //_preconditioner->revert(_oldInvJacobian,true);
+  _preconditioner->apply(_oldInvJacobian,false);
+  _preconditioner->revert(_oldInvJacobian,true);
   ePrecond_1.stop();
   computeNewtonFactorsUpdatedQRDecomposition(cplData, xUpdate);
   Event ePrecond_2("precond J (2)", true, true); // time measurement, barrier
-  //_preconditioner->revert(_oldInvJacobian,false);
-  //_preconditioner->apply(_oldInvJacobian,true);
+  _preconditioner->revert(_oldInvJacobian,false);
+  _preconditioner->apply(_oldInvJacobian,true);
   ePrecond_2.stop();
 }
 
@@ -295,6 +295,11 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	*/
 	Event e_WtilZ("compute J = W_til*Z", true, true); // time measurement, barrier
 
+//	Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
+//	_infostream<<"_dimOffsets: "<<_dimOffsets<<"  LS rows: "<<getLSSystemRows()<<" LS cols: "<<getLSSystemCols()<<std::endl;
+//	_infostream<<"\nWtil: \n"<<W_til.format(CommaInitFmt)<<std::endl;
+//	_infostream<<"\nZ^T: \n"<<Z.format(CommaInitFmt)<<std::endl;
+
 	_parMatrixOps.multiply(W_til, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
 	e_WtilV.stop();
 
@@ -333,8 +338,8 @@ void MVQNPostProcessing:: specializedIterationsConverged
 {
   // store inverse Jacobian from last time step
   _oldInvJacobian = _invJacobian;
-  //_preconditioner->revert(_oldInvJacobian,false);
-  //_preconditioner->apply(_oldInvJacobian,true);
+  _preconditioner->revert(_oldInvJacobian,false);
+  _preconditioner->apply(_oldInvJacobian,true);
 }
 
 }}} // namespace precice, cplscheme, impl
