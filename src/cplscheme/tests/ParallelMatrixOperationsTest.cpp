@@ -60,13 +60,15 @@ void ParallelMatrixOperationsTest:: run ()
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
 
-    std::vector<int> ranksWanted2;
-    ranksWanted2 = {0, 1, 2};
-    comm = Par::getRestrictedCommunicator(ranksWanted2);
-    if (Par::getProcessRank() <= 2){
-      Par::setGlobalCommunicator(comm);
-      testMethod(testLargeParMatMat_Eigen);
-      Par::setGlobalCommunicator(Par::getCommunicatorWorld());
+    for(int i = 0; i<50; i++){
+      std::vector<int> ranksWanted2;
+      ranksWanted2 = {0, 1, 2};
+      comm = Par::getRestrictedCommunicator(ranksWanted2);
+      if (Par::getProcessRank() <= 2){
+        Par::setGlobalCommunicator(comm);
+        testMethod(testLargeParMatMat_Eigen);
+        Par::setGlobalCommunicator(Par::getCommunicatorWorld());
+      }
     }
 
   }
@@ -1126,35 +1128,35 @@ void ParallelMatrixOperationsTest::testLargeParMatMat_Eigen()
    */
   // 2.) multiply WZ = W * Z (n x n), parallel: (n_global x n_local)
 
-  for(int i = 0; i<50; i++){
+  //for(int i = 0; i<50; i++){
     Eigen::MatrixXd J_local (n_global, n_local);
 
     // iteration #1
     parMatrixOps.multiply(Wtil1, Z1, J_local, vertexOffsets, n_global, 1, n_global);
     double norm_res = J_local.norm();
     validate (tarch::la::equals(norm_jacobian1, norm_res));
-    preciceDebug("large MatMat test with cyclic communication, iteration (1/5), test ("<<i<<"/50)");
+//    preciceDebug("large MatMat test with cyclic communication, iteration (1/5), test ("<<i<<"/50)");
 
     // iteration #2
     J_local = Eigen::MatrixXd::Zero(n_global, n_local);
     parMatrixOps.multiply(Wtil2, Z2, J_local, vertexOffsets, n_global, 2, n_global);
     norm_res = J_local.norm();
     validate (tarch::la::equals(norm_jacobian2, norm_res));
-    preciceDebug("large MatMat test with cyclic communication, iteration (2/5), test ("<<i<<"/50)");
+//    preciceDebug("large MatMat test with cyclic communication, iteration (2/5), test ("<<i<<"/50)");
 
     // iteration #3
     J_local = Eigen::MatrixXd::Zero(n_global, n_local);
     parMatrixOps.multiply(Wtil3, Z3, J_local, vertexOffsets, n_global, 3, n_global);
     norm_res = J_local.norm();
     validate (tarch::la::equals(norm_jacobian3, norm_res));
-    preciceDebug("large MatMat test with cyclic communication, iteration (3/5), test ("<<i<<"/50)");
+//    preciceDebug("large MatMat test with cyclic communication, iteration (3/5), test ("<<i<<"/50)");
 
     // iteration #4
     J_local = Eigen::MatrixXd::Zero(n_global, n_local);
     parMatrixOps.multiply(Wtil4, Z4, J_local, vertexOffsets, n_global, 4, n_global);
     norm_res = J_local.norm();
     validate (tarch::la::equals(norm_jacobian4, norm_res));
-    preciceDebug("large MatMat test with cyclic communication, iteration (4/5), test ("<<i<<"/50)");
+//    preciceDebug("large MatMat test with cyclic communication, iteration (4/5), test ("<<i<<"/50)");
 
     // iteration #5
     J_local = Eigen::MatrixXd::Zero(n_global, n_local);
@@ -1162,8 +1164,8 @@ void ParallelMatrixOperationsTest::testLargeParMatMat_Eigen()
     norm_res = J_local.norm();
     validate (tarch::la::equals(norm_jacobian5, norm_res));
 
-    preciceDebug("large MatMat test with cyclic communication, iteration (5/5), test ("<<i<<"/50)");
-  }
+    //preciceDebug("large MatMat test with cyclic communication, iteration (5/5), test ("<<i<<"/50)");
+  //}
 
 
   utils::MasterSlave::_communication->closeConnection();
