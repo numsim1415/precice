@@ -266,7 +266,7 @@ private:
 	//		if (leftMatrix_rcv.size() > 0) if (_fstream_set) (*_infostream)<<"rcv W_til("<<sourceProc<<","<<utils::MasterSlave::_rank<<"): "<<leftMatrix_rcv.bottomRows(5)<<std::endl;
 			preciceDebug(" -- cycle "<<cycle<<" --");
 			if (leftMatrix_rcv.size() > 0) preciceDebug("norm Wtil("<<sourceProc<<","<<utils::MasterSlave::_rank<<"): "<<leftMatrix_rcv.norm()<<" (rcv), size: ("<<leftMatrix_rcv.rows()<<","<<leftMatrix_rcv.cols()<<") = "<<leftMatrix_rcv.size());
-			if (leftMatrix_rcv.size() > 0) preciceDebug("rcv W_til("<<sourceProc<<","<<utils::MasterSlave::_rank<<"): "<<leftMatrix_rcv.bottomRows(3));
+			if (leftMatrix_rcv.size() > 0) preciceDebug("rcv W_til("<<sourceProc<<","<<utils::MasterSlave::_rank<<"): \n"<<leftMatrix_rcv.bottomRows(3));
 			// leftMatrix (leftMatrix_rcv) is available - needed for local multiplication and hand over to next proc
 			EigenMatrix leftMatrix_copy(leftMatrix_rcv);
 
@@ -278,7 +278,7 @@ private:
 	//		  if (_fstream_set) (*_infostream)<<"norm Wtil("<<sourceProc<<","<<utils::MasterSlave::_rank<<"): "<<leftMatrix_copy.norm()<<" (send), size: ("<<leftMatrix_copy.rows()<<","<<leftMatrix_copy.cols()<<")"<<std::endl;
 	//		  if (leftMatrix_copy.size() > 0)  if (_fstream_set) (*_infostream)<<"send W_til("<<sourceProc<<","<<utils::MasterSlave::_rank<<"): "<<leftMatrix_copy.bottomRows(5)<<std::endl;
 			  if (leftMatrix_copy.size() > 0) preciceDebug("norm Wtil("<<sourceProc<<","<<utils::MasterSlave::_rank<<"): "<<leftMatrix_copy.norm()<<" (send), size: ("<<leftMatrix_copy.rows()<<","<<leftMatrix_copy.cols()<<")");
-			  if (leftMatrix_copy.size() > 0) preciceDebug("send W_til("<<sourceProc<<","<<utils::MasterSlave::_rank<<"): "<<leftMatrix_copy.bottomRows(3));
+			  if (leftMatrix_copy.size() > 0) preciceDebug("send W_til("<<sourceProc<<","<<utils::MasterSlave::_rank<<"): \n"<<leftMatrix_copy.bottomRows(3));
 			}
 
 			// compute proc that owned leftMatrix_rcv (Wtil_rcv) at the very beginning for each cylce
