@@ -130,6 +130,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 	  bool linearDependence = true;
 	  std::vector<int> delFlag(V.cols(), 0);
 	  while (linearDependence) {
+	    linearDependence = false;
       _Q.resize(0,0);
       _R.resize(0,0);
       _cols = 0;
