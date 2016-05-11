@@ -126,6 +126,47 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 	delIndices.resize(0);
 	if(_filter == PostProcessing::QR1FILTER || _filter == PostProcessing::QR1FILTER_ABS)
 	{
+
+	  bool linearDependence = true;
+	  std::vector<int> delFlag(V.cols(), 0);
+	  while (linearDependence) {
+      _Q.resize(0,0);
+      _R.resize(0,0);
+      _cols = 0;
+      _rows = V.rows();
+      // starting with the most recent input/output information, i.e., the latest column
+      // which is at position 0 in _matrixV (latest information is never filtered out!)
+      for (int k=0; k < V.cols(); k++)
+      {
+        // not insert column if column has been deleted in previous rounds
+        if(delFlag[k] > 0) continue;
+
+        EigenVector v = V.col(k);
+        // this is the same as pushBack(v) as _cols grows within the insertion process
+        bool inserted = insertColumn(_cols, v);
+        if (!inserted) preciceWarning(__func__, "unable to insert column in QR-decomposition, failed to orthogonalize. Should not happen for QR1-filter");
+      }
+
+      // QR1-filter
+      int index = 0; // actual index of checked column, \in [0, _cols] and _cols is decreasing
+      double factor = (_filter == PostProcessing::QR1FILTER_ABS) ? 1.0 : _R.norm();
+      for(size_t i = 0; i < delFlag.size(); i++){
+        // index is not incremented, if columns has been deleted in previous rounds
+        if(delFlag[i] > 0) continue;
+
+        assertion(index < _cols, index, _cols);
+        if (std::fabs(_R(index, index)) < singularityLimit * factor) {
+
+          linearDependence = true;
+          //deleteColumn(index);
+          delFlag[i]++;
+          delIndices.push_back(i);
+          break;
+        }
+      }
+	  }
+
+	  /*
 		bool linearDependence = true;
 		std::vector<int> delFlag(_cols, 0);
 		int delCols = 0;
@@ -156,6 +197,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 				}
 			}
 		}
+		*/
 	}else if(_filter == PostProcessing::QR2FILTER)
 	{
 		  _Q.resize(0,0);
