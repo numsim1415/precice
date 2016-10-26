@@ -1,4 +1,4 @@
-#include "PreconditionerTest.h"
+#include "PreconditionerTest.hpp"
 #include "cplscheme/impl/ResidualPreconditioner.hpp"
 #include "cplscheme/impl/ResidualSumPreconditioner.hpp"
 #include "cplscheme/impl/ValuePreconditioner.hpp"

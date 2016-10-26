@@ -1,7 +1,7 @@
 #ifndef PRECICE_NO_MPI
 #include "mpi.h"
 #endif
-#include "QRFactorizationTest.h"
+#include "QRFactorizationTest.hpp"
 #include "cplscheme/impl/QRFactorization.hpp"
 #include "cplscheme/impl/BaseQNPostProcessing.hpp"
 #include <Eigen/Dense>
