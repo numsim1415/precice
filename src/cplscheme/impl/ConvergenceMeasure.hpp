@@ -4,7 +4,7 @@
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 
 namespace precice {
 namespace cplscheme {

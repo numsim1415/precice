@@ -10,12 +10,8 @@
 #include "utils/EventTimings.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "QRFactorization.hpp"
-#include "Eigen/Dense"
-#include <sys/unistd.h>
+#include <Eigen/Dense>
 
-#include "tarch/tests/TestMacros.h"
-
-#include <time.h>
 
 //#include "utils/NumericalCompare.hpp"
 
@@ -56,7 +52,6 @@ void IQNILSPostProcessing::initialize
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
 
-  double init = 0.0;
   // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
   for (DataMap::value_type& pair: cplData){
     if (not utils::contained(pair.first, _dataIDs)){

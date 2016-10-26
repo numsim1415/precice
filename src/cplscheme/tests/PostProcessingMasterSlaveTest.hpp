@@ -44,8 +44,7 @@ public:
    virtual void run ();
 
    typedef std::map<int,PtrCouplingData> DataMap;
-   typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
-
+   
 private:
 
    static logging::Logger _log;

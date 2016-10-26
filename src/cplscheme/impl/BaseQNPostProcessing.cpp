@@ -353,7 +353,6 @@ void BaseQNPostProcessing::performPostProcessing
   preciceTrace("performPostProcessing()", _dataIDs.size(), cplData.size());
   Event e("Base-QN_performPostProcessing()", true, true); // time measurement, barrier
 
-  using namespace tarch::la;
   assertion(_oldResiduals.size() == _oldXTilde.size(),_oldResiduals.size(), _oldXTilde.size());
   assertion(_values.size() == _oldXTilde.size(),_values.size(), _oldXTilde.size());
   assertion(_oldValues.size() == _oldXTilde.size(),_oldValues.size(), _oldXTilde.size());

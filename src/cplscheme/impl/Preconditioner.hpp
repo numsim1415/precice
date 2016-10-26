@@ -28,7 +28,6 @@ public:
 
   //see post-processing definitions
   typedef tarch::la::DynamicVector<double> DataValues;
-  typedef std::map<int,PtrCouplingData> DataMap;
   typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
   
   Preconditioner(

@@ -4,7 +4,7 @@
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/Globals.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include "../SharedPointer.hpp"
 
 namespace precice {

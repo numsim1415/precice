@@ -56,26 +56,15 @@ private:
    /**
     * @brief Tests the correct postprocessing for MVQN-like vector data
     */
-   void testParallelMatrixMatrixOp_tarch();
-   void testParallelMatrixMatrixOp_Eigen();
+   void testParallelMatrixMatrixOp();
 
    void testParVectorOperations();
 
    void validate_result_equals_reference(
-			tarch::la::DynamicMatrix<double>& result_local,
-			tarch::la::DynamicMatrix<double>& reference_global,
-			std::vector<int>& offsets,
-			bool partitionedRowWise);
-   void validate_result_equals_reference(
    			Eigen::MatrixXd& result_local,
    			Eigen::MatrixXd& reference_global,
    			std::vector<int>& offsets,
-   			bool partitionedRowWise);
-   void validate_result_equals_reference(
-			tarch::la::DynamicVector<double>& result_local,
-			tarch::la::DynamicVector<double>& reference_global,
-			std::vector<int>& offsets);
-
+   			bool partitionedRowWise);   
 };
 
 }}} // namespace precice, cplscheme, tests

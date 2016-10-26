@@ -69,7 +69,7 @@ void ExplicitCouplingSchemeTest:: run ()
 
 void ExplicitCouplingSchemeTest:: testSimpleExplicitCoupling()
 {
-  preciceTrace ( "testSimpleExplicitiCoupling()" );
+  TRACE();
   utils::Parallel::synchronizeProcesses();
 
   mesh::PropertyContainer::resetPropertyIDCounter();
@@ -439,7 +439,7 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
         // coupled simulation, in the last advance call
         Eigen::VectorXd value = dataValues1.segment(vertex.getID() * 3, 3);
         // assign(value) = tarch::la::slice<3>(dataValues1, vertex.getID() * 3);
-        validate ( tarch::la::equals(utils::DynVector(value), utils::DynVector(valueData1)) );
+        validate ( math::equals(value, valueData1) );
       }
       validate ( cplScheme.hasDataBeenExchanged() );
       // Increment data values, to test if send/receive operations are also
@@ -676,8 +676,7 @@ void ExplicitCouplingSchemeTest:: runExplicitCouplingWithSubcycling
           // No receive takes place for the participant that has started the
           // coupled simulation, in the last advance call.
           Eigen::VectorXd value = dataValues1.segment(vertex.getID()*3, 3);
-          // assign(value) = tarch::la::slice<3>(dataValues1, vertex.getID()*3);
-          validate ( tarch::la::equals(utils::DynVector(value), utils::DynVector(valueData1)));
+          validate ( math::equals(value, valueData1));
         }
         validate ( cplScheme.hasDataBeenExchanged() );
         // Increment data values, to test if send/receive operations are also

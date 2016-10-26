@@ -852,7 +852,7 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
     auto& values = mesh->data(1)->values();
-    validateWithParams1(tarch::la::equals(utils::DynVector(values), Vector3D(1.0, 2.0, 3.0)), utils::DynVector(values));
+    validateWithParams1(math::equals(values, Eigen::Vector3d(1.0, 2.0, 3.0)), values);
     mesh->data(0)->values() = Eigen::VectorXd::Constant(mesh->data(0)->values().size(), 4.0);
     while (cplScheme.isCouplingOngoing()){
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){
@@ -870,12 +870,12 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
     validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     cplScheme.performedAction(constants::actionWriteInitialData());
     auto& values = mesh->data(0)->values();
-    validateWithParams1(tarch::la::equals(values(0), 0.0), utils::DynVector(values));
+    validateWithParams1(math::equals(values(0), 0.0), values);
     Eigen::VectorXd v(3); v << 1.0, 2.0, 3.0;
     mesh->data(1)->values() = v;
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
-    validateWithParams1(tarch::la::equals(values(0), 4.0), utils::DynVector(values));
+    validateWithParams1(math::equals(values(0), 4.0), values);
     while (cplScheme.isCouplingOngoing()){
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){
         cplScheme.performedAction(writeIterationCheckpoint);

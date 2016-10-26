@@ -19,10 +19,8 @@ RelativeConvergenceMeasure:: RelativeConvergenceMeasure
    _norm(0.0),
    _isConvergence ( false )
 {
-   preciceCheck ( tarch::la::greater(_convergenceLimitPercent, 0.0)
-                  && tarch::la::greaterEquals(1.0, _convergenceLimitPercent),
-                  "RelativeConvergenceLimit()", "Relative convergence limit "
-                  << "has in ]0;1] !" );
+   CHECK ( math::greater(_convergenceLimitPercent, 0.0) && math::greaterEquals(1.0, _convergenceLimitPercent),
+           "Relative convergence limit has to be in ]0;1] !" );
 }
 
 //void RelativeConvergenceMeasure:: startMeasurement ()

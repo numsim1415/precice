@@ -34,7 +34,7 @@ void HierarchicalAitkenPostProcessing:: initialize
 (
   DataMap & cplData )
 {
-  preciceTrace ( "initialize()" );
+  TRACE();
   preciceCheck ( utils::contained(*_dataIDs.begin(), cplData), "initialize()",
                  "Data with ID " << *_dataIDs.begin()
                  << " is not contained in data given at initialization!" );
