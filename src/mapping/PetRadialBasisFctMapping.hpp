@@ -89,8 +89,6 @@ private:
 
   KSP _solver;
 
-  ISLocalToGlobalMapping _ISmapping;
-
   const double _solverRtol;
 
   /// true if the mapping along some axis should be ignored
@@ -163,7 +161,6 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
   PetscErrorCode ierr = 0;
   PetscInitialized(&petscIsInitialized);
   if (petscIsInitialized) {
-    ierr = ISLocalToGlobalMappingDestroy(&_ISmapping); CHKERRV(ierr);
     ierr = KSPDestroy(&_solver); CHKERRV(ierr);
   }
 }
@@ -238,32 +235,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   const int ownerRangeABegin = _matrixA.ownerRange().first;
   const int ownerRangeAEnd = _matrixA.ownerRange().second;
   
-  IS ISlocal, ISlocalInv, ISglobal, ISidentity, ISidentityGlobal;
-  ISLocalToGlobalMapping ISidentityMapping;
-  // Create an index set which maps myIndizes to continous chunks of matrix rows.
-  ierr = ISCreateGeneral(PETSC_COMM_WORLD, myIndizes.size(), myIndizes.data(), PETSC_COPY_VALUES, &ISlocal); CHKERRV(ierr);
-  ierr = ISSetPermutation(ISlocal); CHKERRV(ierr);
-  ierr = ISInvertPermutation(ISlocal, myIndizes.size(), &ISlocalInv); CHKERRV(ierr);
-  ierr = ISAllGather(ISlocalInv, &ISglobal); CHKERRV(ierr); // Gather the IS from all processors
-  ierr = ISLocalToGlobalMappingCreateIS(ISglobal, &_ISmapping); CHKERRV(ierr); // Make it a mapping
-  
-  // Create an identity mapping and use that for the rows of matrixA.
-  ierr = ISCreateStride(PETSC_COMM_WORLD, ownerRangeAEnd - ownerRangeABegin, ownerRangeABegin, 1, &ISidentity); CHKERRV(ierr);
-  ierr = ISSetIdentity(ISidentity); CHKERRV(ierr);
-  ierr = ISAllGather(ISidentity, &ISidentityGlobal); CHKERRV(ierr);
-  ierr = ISLocalToGlobalMappingCreateIS(ISidentityGlobal, &ISidentityMapping); CHKERRV(ierr);
-
-  ierr = MatSetLocalToGlobalMapping(_matrixC, _ISmapping, _ISmapping); CHKERRV(ierr); // Set mapping for rows and cols
-  ierr = MatSetLocalToGlobalMapping(_matrixA, ISidentityMapping, _ISmapping); CHKERRV(ierr); // Set mapping only for cols, use identity for rows
-
-  // Destroy all local index sets and mappings
-  ierr = ISDestroy(&ISlocal); CHKERRV(ierr);
-  ierr = ISDestroy(&ISlocalInv); CHKERRV(ierr);
-  ierr = ISDestroy(&ISglobal); CHKERRV(ierr);
-  ierr = ISDestroy(&ISidentity); CHKERRV(ierr);
-  ierr = ISDestroy(&ISidentityGlobal); CHKERRV(ierr);
-  ierr = ISLocalToGlobalMappingDestroy(&ISidentityMapping); CHKERRV(ierr);
-
   Eigen::VectorXd distance(dimensions);
 
   // We do preallocating of the matrices C and A. That means we traverse the input data once, just
@@ -328,14 +299,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PetscInt polyRow = 0, polyCol = row;
     if (_polynomial) {
       PetscScalar y = 1;
-      ierr = MatSetValuesLocal(_matrixC, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
+      ierr = MatSetValues(_matrixC, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
       int actualDim = 0;
       for (int dim = 0; dim < dimensions; dim++) {
         if (not _deadAxis[dim]) {
           y = inVertex.getCoords()[dim];
           polyRow = 1 + actualDim;
           actualDim++;
-          ierr = MatSetValuesLocal(_matrixC, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
+          ierr = MatSetValues(_matrixC, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
         }
       }
     }
@@ -357,7 +328,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
     }
 
-    ierr = MatSetValuesLocal(_matrixC, 1, &row, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
+    ierr = MatSetValues(_matrixC, 1, &row, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
   }
   DEBUG("Finished filling Matrix C");
   eFillC.stop();
@@ -435,13 +406,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     if (_polynomial) {
       PetscInt polyRow = it, polyCol = 0;
       PetscScalar y = 1;
-      ierr = MatSetValuesLocal(_matrixA, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
+      ierr = MatSetValues(_matrixA, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
       for (int dim = 0; dim < dimensions; dim++) {
         if (not _deadAxis[dim]) {
           y = oVertex.getCoords()[dim];
           polyCol++;
           // DEBUG("Filling A with polyparams: polyRow = " << polyRow << ", polyCol = " << polyCol << " Preallocation = " << nnzA[polyRow]);
-          ierr = MatSetValuesLocal(_matrixA, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr); // das zusammen mit den MatSetValuesLocal unten machen
+          ierr = MatSetValues(_matrixA, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr); // das zusammen mit den MatSetValuesLocal unten machen
         }
       }
     }
@@ -461,7 +432,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
     }
     // DEBUG("Filling A: row = " << it << ", col count = " << colNum);
-    ierr = MatSetValuesLocal(_matrixA, 1, &it, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
+    ierr = MatSetValues(_matrixA, 1, &it, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
   }
   DEBUG("Finished filling Matrix A");
   eFillA.stop();
@@ -507,7 +478,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
   _matrixA.reset();
   previousSolution.clear();
   _hasComputedMapping = false;
-  // ISmapping destroy??
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -601,7 +571,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
     petsc::Vector out(_matrixA, "out");
     petsc::Vector in(_matrixC, "in");
         
-    ierr = VecSetLocalToGlobalMapping(in, _ISmapping); CHKERRV(ierr);
     const PetscScalar *vecArray;
 
     // For every data dimension, perform mapping
@@ -609,7 +578,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       // Fill input from input data values
       int count = 0;
       for (const auto& vertex : input()->vertices()) {
-        VecSetValueLocal(in, vertex.getGlobalIndex()+polyparams, inValues[count*valueDim + dim], INSERT_VALUES); // evtl. besser als VecSetValuesLocal
+        VecSetValue(in, vertex.getGlobalIndex()+polyparams, inValues[count*valueDim + dim], INSERT_VALUES); // evtl. besser als VecSetValuesLocal
         count++;
       }
       in.assemble();

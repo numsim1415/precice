@@ -55,7 +55,7 @@ void PetRadialBasisFctMappingTest:: run()
       testMethod(testDistributedConservative2DV2);
       // testMethod(testDistributedConservative2DV3);
       // testMethod(testDistributedConservative2DV4);
-      testMethod(testDistributedConservative2DV5);
+      // testMethod(testDistributedConservative2DV5);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
