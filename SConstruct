@@ -163,14 +163,16 @@ if env["platform"] == "hazelhen":
     env.Append(CPPPATH = [os.environ['BOOST_ROOT'] + '/include'])
     env.Append(LIBPATH = [os.environ['BOOST_ROOT'] + '/lib'])
 
-env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3'])
+env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3',
+                        'BOOST_ALL_DYN_LINK'])
+
 uniqueCheckLib(conf, "boost_log")
 uniqueCheckLib(conf, "boost_log_setup")
 uniqueCheckLib(conf, "boost_thread")
 uniqueCheckLib(conf, "boost_system")
 uniqueCheckLib(conf, "boost_filesystem")
 uniqueCheckLib(conf, "boost_program_options")
-env.Append(CPPDEFINES=["BOOST_LOG_DYN_LINK"])
+uniqueCheckLib(conf, "boost_unit_test_framework")
 
 if not conf.CheckCXXHeader('boost/vmd/is_empty.hpp'):
     errorMissingHeader('boost/vmd/is_empty.hpp', 'Boost Variadic Macro Data Library')
@@ -254,7 +256,7 @@ env = conf.Finish() # Used to check libraries
 
 #--------------------------------------------- Define sources and build targets
 
-(sourcesPreCICE, sourcesPreCICEMain) = SConscript (
+(sourcesAllNoMain, sourcesMain, sourcesTests) = SConscript (
     'src/SConscript-linux',
     variant_dir = buildpath,
     duplicate = 0
@@ -262,21 +264,29 @@ env = conf.Finish() # Used to check libraries
 
 staticlib = env.StaticLibrary (
     target = buildpath + '/libprecice',
-    source = [sourcesPreCICE]
+    source = [sourcesAllNoMain]
 )
 env.Alias("staticlib", staticlib)
 
 solib = env.SharedLibrary (
     target = buildpath + '/libprecice',
-    source = [sourcesPreCICE]
+    source = [sourcesAllNoMain]
 )
 env.Alias("solib", solib)
 
 bin = env.Program (
     target = buildpath + '/binprecice',
-    source = [sourcesPreCICEMain]
+    source = [sourcesAllNoMain,
+              sourcesMain]
 )
 env.Alias("bin", bin)
+
+tests = env.Program (
+    target = buildpath + '/testprecice',
+    source = [sourcesAllNoMain,
+              sourcesTests]
+)
+env.Alias("tests", tests)
 
 # Creates a symlink that always points to the latest build
 symlink = env.Command(
@@ -285,7 +295,8 @@ symlink = env.Command(
     action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], os.path.join(os.path.split(buildpath)[0], "last"))
 )
 
-Default(staticlib, solib, bin, symlink)
+Default(staticlib, bin, solib, tests, symlink)
+
 AlwaysBuild(symlink)
 
 print "Targets:   " + ", ".join([str(i) for i in BUILD_TARGETS])
