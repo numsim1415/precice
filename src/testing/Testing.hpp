@@ -6,50 +6,52 @@ namespace precice { namespace testing {
 
 namespace bt = boost::unit_test;
 
-/// Boost.Test decorator that makes the test run only on the master
-class MasterOnly : public bt::decorator::base {
-private:
-  
-  virtual void apply(bt::test_unit& tu)
-  {
-    if (precice::utils::Parallel::getProcessRank() != 0)
-      tu.p_default_status.value = bt::test_case::RS_DISABLED;
-  }
-
-  virtual bt::decorator::base_ptr clone() const
-  {
-    return bt::decorator::base_ptr(new MasterOnly());
-  }
-
-};
-
 /// Boost.Test decorator that makes the test run only on specfic ranks
-class RanksOnly : public boost::unit_test::decorator::base {
+class OnRanks : public bt::decorator::base
+{
 public:
 
-  explicit RanksOnly(const std::vector<int> & ranks) :
+  explicit OnRanks(const std::vector<int> & ranks) :
     _ranks(ranks)
   {}
 
 private:
   
-  virtual void apply(boost::unit_test::test_unit& tu)
+  virtual void apply(bt::test_unit& tu)
   {
-    int rank = precice::utils::Parallel::getProcessRank();
+    size_t rank = precice::utils::Parallel::getProcessRank();
+    size_t size = precice::utils::Parallel::getCommunicatorSize();
+
+    if (_ranks.size() > size) {
+      tu.p_default_status.value = bt::test_case::RS_DISABLED;
+      return;
+    }
     
     if (std::find(_ranks.begin(), _ranks.end(), rank) == _ranks.end()) {
-      tu.p_default_status.value = boost::unit_test::test_case::RS_DISABLED;
+      tu.p_default_status.value = bt::test_case::RS_DISABLED;
+      return;
     }
   }
 
-  virtual boost::unit_test::decorator::base_ptr clone() const
+  virtual bt::decorator::base_ptr clone() const
   {
-    return boost::unit_test::decorator::base_ptr(new RanksOnly(_ranks));
+    return bt::decorator::base_ptr(new OnRanks(_ranks));
   }
 
   std::vector<int> _ranks;
   
 };
+
+/// Boost.Test decorator that makes the test run only on the master
+class OnMaster : public OnRanks
+{
+public:
+  explicit OnMaster() :
+    OnRanks({0})
+  {}
+};
+
+
 
 
 }}
