@@ -1,14 +1,13 @@
-/*
- * @todo Copy tests from tarch::la
- */
-
 #pragma once
 
 #include <Eigen/Dense>
 #include "tarch/la/DynamicVector.h"
 #include "tarch/la/Vector.h"
-
 namespace precice {
+
+/**
+ * @todo Copy tests from tarch::la
+ */
 namespace math {
 
 constexpr double NUMERICAL_ZERO_DIFFERENCE = 1.0e-14;
