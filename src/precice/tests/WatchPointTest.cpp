@@ -26,14 +26,14 @@ void WatchPointTest:: run ()
     TRACE();
     using namespace mesh;
     int dim = 2;
-    
+    using Eigen::VectorXd;
     // Setup geometry
     std::string name ( "rectangle" );
     bool flipNormals = false;
     PtrMesh mesh ( new Mesh(name, dim, flipNormals) );
-    Eigen::VectorXd offset = Eigen::VectorXd::Zero(dim);
+    VectorXd offset = VectorXd::Zero(dim);
     double discretizationWidth = 0.5;
-    Eigen::VectorXd sidelengths = Eigen::VectorXd::Constant(dim, 1.0);
+    VectorXd sidelengths = VectorXd::Constant(dim, 1.0);
     geometry::Cuboid rectangleGeometry ( offset, discretizationWidth, sidelengths );
     PtrData doubleData = mesh->createData ( "DoubleData", 1 );
     PtrData vectorData = mesh->createData ( "VectorData", dim );
@@ -42,10 +42,10 @@ void WatchPointTest:: run ()
     rectangleGeometry.create ( *mesh );
 
     // Create watchpoints
-    Eigen::VectorXd pointToWatch0 = Eigen::VectorXd::Constant(dim, 1.0);
+    VectorXd pointToWatch0 = VectorXd::Constant(dim, 1.0);
     std::string filename0 ( "tests-WatchPointTest-output0.txt" );
     impl::WatchPoint watchpoint0 ( pointToWatch0, mesh, filename0 );
-    Eigen::Vector2d pointToWatch1(1, 0.5);
+    Eigen::Vector2d pointToWatch1(1.0, 0.5);
     std::string filename1 ( "tests-WatchPointTest-output1.txt" );
     impl::WatchPoint watchpoint1 ( pointToWatch1, mesh, filename1 );
 

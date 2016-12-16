@@ -44,7 +44,7 @@ const mesh::PtrMesh& WatchPoint:: mesh() const
 
 void WatchPoint:: initialize()
 {
-  preciceTrace ( "initialize()");
+  TRACE();
   // Find closest vertex
   if(_mesh->vertices().size()>0){
     query::FindClosestVertex findVertex ( _point );

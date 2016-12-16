@@ -36,7 +36,6 @@ ClosestMesh:: ClosestMesh
 :
   _impl ( new impl::ClosestMeshImplementation(dimensions) )
 {
-
   _impl->position = spacetree::Spacetree::positionUndefined();
   _impl->distanceVector.setConstant(std::numeric_limits<double>::max());
 }

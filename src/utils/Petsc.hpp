@@ -98,6 +98,7 @@ public:
 
   void fill_with_randoms();
 
+  /// Sorts the LOCAL partion of the vector
   void sort();
 
   void assemble();
@@ -164,7 +165,11 @@ public:
   
   void set_column(Vector &v, int col);
 
+  /// Returns (rows, cols) global size
   std::pair<PetscInt, PetscInt> getSize();
+
+  /// Returns (rows, cols) local size
+  std::pair<PetscInt, PetscInt> getLocalSize();
   
   /// Returns a pair that mark the beginning and end of the matrix' ownership range.
   std::pair<PetscInt, PetscInt> ownerRange();
@@ -175,14 +180,14 @@ public:
   /// Writes the matrix to file.
   void write(std::string filename, VIEWERFORMAT format = ASCII);
 
-  /// Reads the matrix from file.
-  void read(std::string filename, VIEWERFORMAT format = ASCII);
+  /// Reads the matrix from file, stored in PETSc binary format
+  void read(std::string filename);
 
   /// Prints the matrix
   void view();
 
   void viewDraw();
-  
+
 };
 
 }}} // namespace precice, utils, petsc

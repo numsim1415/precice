@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <stddef.h>
+#include <cstddef>
 
 namespace precice {
   namespace mesh {
@@ -71,7 +71,7 @@ public:
   /// Returns iterator to end of the geometry's vertices.
   VertexIterator end() const;
 
-  size_t size() const;
+  std::size_t size() const;
 
 private:
 
@@ -127,7 +127,7 @@ public:
     */
    EdgeIterator end() const;
 
-   size_t size() const;
+  std::size_t size() const;
 
 private:
 
@@ -182,7 +182,7 @@ public:
     */
    TriangleIterator end() const;
 
-   size_t size() const;
+  std::size_t size() const;
 
 private:
 

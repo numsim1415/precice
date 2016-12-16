@@ -47,9 +47,7 @@ void CompositionalCouplingSchemeTest:: run ()
     testMethod(testDummySchemeCompositions);
   }
   if (Par::getCommunicatorSize() > 2){
-    std::vector<int> ranks;
-    ranks += 0, 1, 2;
-    Par::Communicator comm = Par::getRestrictedCommunicator(ranks);
+    Par::Communicator comm = Par::getRestrictedCommunicator({0, 1, 2});
     if (Par::getProcessRank() <= 2){
       Par::setGlobalCommunicator(comm) ;
       validateEquals(Par::getCommunicatorSize(), 3);
@@ -733,9 +731,7 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
   mesh::PtrMesh mesh = meshConfig->meshes()[0];
   validateEquals(mesh->data().size(), 3);
   validate(mesh->vertices().size() > 0);
-  Eigen::Vector3d valueData1 = Eigen::Vector3d::Constant(1.0);
-  Eigen::Vector3d valueData2 = Eigen::Vector3d::Constant(1.0);
-
+  
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
 

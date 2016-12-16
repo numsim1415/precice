@@ -313,7 +313,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   int logCLoop = 2;
   PetscLogEventRegister("Filling Matrix C", 0, &logCLoop);
   PetscLogEventBegin(logCLoop, 0, 0, 0, 0);
-  precice::utils::Event eFillC("Filling Matrix C");
+  precice::utils::Event eFillC("PetRBF.fillC");
   // We collect entries for each row and set them blockwise using MatSetValues.
   for (const mesh::Vertex& inVertex : inMesh->vertices()) {
     if (not inVertex.isOwner())
@@ -421,7 +421,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   int logALoop = 4;
   PetscLogEventRegister("Filling Matrix A", 0, &logALoop);
   PetscLogEventBegin(logALoop, 0, 0, 0, 0);
-  precice::utils::Event eFillA("Filling Matrix A");
+  precice::utils::Event eFillA("PetRBF.fillA");
 
   for (int it = ownerRangeABegin; it < ownerRangeAEnd; it++) {
     // hier colIdx, colVals über inMesh->vertices.count dimensionieren?
@@ -520,10 +520,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
             input()->getDimensions(), output()->getDimensions());
 
   const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
-  INFO("Mapping " << input()->data(inputDataID)->getName()
-       << " " << constraintName
-       << " from " << input()->getName() << " (ID " << input()->getID() << ")"
-       << " to " << output()->getName() << " (ID " << output()->getID() << ")");
   
   PetscErrorCode ierr = 0;
   KSPConvergedReason convReason;
@@ -546,7 +542,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
     
     // Fill input from input data values
     for (int dim=0; dim < valueDim; dim++) {
-      DEBUG("input()->vertices().size() = " << input()->vertices().size());
+      INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
+           << " from " << input()->getName() << " (ID " << input()->getID() << ")"
+           << " to " << output()->getName() << " (ID " << output()->getID() << ") for dimension " << dim);
+  
       for (size_t i = 0; i < input()->vertices().size(); i++ ) {
         int globalIndex = input()->vertices()[i].getGlobalIndex();
         VecSetValue(in, globalIndex, inValues[(i)*valueDim + dim], INSERT_VALUES); // Dies besser als VecSetValuesLocal machen
@@ -562,13 +561,20 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         )->second;
       
       ierr = MatMultTranspose(_matrixA, in, Au); CHKERRV(ierr);
+      utils::Event eSolve("PetRBF.solve.conservative");
       ierr = KSPSolve(_solver, Au, out); CHKERRV(ierr);
+      eSolve.stop();
+      
+      PetscInt iterations;
+      KSPGetIterationNumber(_solver, &iterations);
+      utils::EventRegistry::setProp("PetRBF.its.conservative", iterations);
+      
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
       if (convReason < 0) {
         KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
         ERROR("RBF linear system has not converged.");
       }
-      
+            
       VecChop(out, 1e-9);
 
       // Copy mapped data to output data values
@@ -598,6 +604,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
 
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++) {
+      INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
+           << " from " << input()->getName() << " (ID " << input()->getID() << ")"
+           << " to " << output()->getName() << " (ID " << output()->getID() << ") for dimension " << dim);
+      
       // Fill input from input data values
       int count = 0;
       for (const auto& vertex : input()->vertices()) {
@@ -611,13 +621,21 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
                                  std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
                                  std::forward_as_tuple(_matrixC, "p"))
         )->second;
-      
+
+      utils::Event eSolve("PetRBF.solve.consistent");
       ierr = KSPSolve(_solver, in, p); CHKERRV(ierr);
+      eSolve.stop();
+      
+      PetscInt iterations;
+      KSPGetIterationNumber(_solver, &iterations);
+      utils::EventRegistry::setProp("PetRBF.its.consistent", iterations);
+
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
       if (convReason < 0) {
         KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
         ERROR("RBF linear system has not converged.");
       }
+
       ierr = MatMult(_matrixA, p, out); CHKERRV(ierr);
       VecChop(out, 1e-9);
 

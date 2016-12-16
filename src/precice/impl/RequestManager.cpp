@@ -8,7 +8,7 @@
 namespace precice {
 namespace impl {
 
-logging::Logger RequestManager:: _log("precice::impl::RequestManager");
+logging::Logger RequestManager::_log("precice::impl::RequestManager");
 
 RequestManager:: RequestManager
 (
@@ -25,7 +25,7 @@ RequestManager:: RequestManager
 
 void RequestManager:: handleRequests()
 {
-  preciceTrace("handleRequests()");
+  TRACE();
   int clientCommSize = _com->getRemoteCommunicatorSize();
   int clientCounter = 0;
   std::list<int> clientRanks;
@@ -264,8 +264,7 @@ void RequestManager:: requestInitialzeData()
 {
   TRACE();
   if (_isGeometryMode){
-    preciceInfo("requestInitializeData()",
-                "Skipping data initialization in geometry mode");
+    INFO("Skipping data initialization in geometry mode");
     return;
   }
   _com->send(REQUEST_INITIALIZE_DATA, 0);
@@ -284,7 +283,7 @@ void RequestManager:: requestAdvance
 
 void RequestManager:: requestFinalize()
 {
-  preciceTrace("requestFinalize()");
+  TRACE();
   _com->send(REQUEST_FINALIZE, 0);
 }
 
@@ -386,7 +385,7 @@ void RequestManager:: requestInquireVoxelPosition
 
 int RequestManager:: requestSetMeshVertex
 (
-  int               meshID,
+  int              meshID,
   Eigen::VectorXd& position )
 {
   TRACE();
@@ -426,7 +425,7 @@ void RequestManager:: requestSetMeshVertices
   double* positions,
   int*    ids )
 {
-  preciceTrace("requestSetMeshVertices()");
+  TRACE();
   _com->send(REQUEST_SET_MESH_VERTICES, 0);
   _com->send(meshID, 0);
   _com->send(size, 0);
@@ -441,7 +440,7 @@ void RequestManager:: requestGetMeshVertices
   int*    ids,
   double* positions )
 {
-  preciceTrace("requestGetMeshVertices()");
+  TRACE();
   _com->send(REQUEST_GET_MESH_VERTICES, 0);
   _com->send(meshID, 0);
   _com->send(size, 0);
@@ -456,7 +455,7 @@ void RequestManager:: requestGetMeshVertexIDsFromPositions
   double* positions,
   int*    ids )
 {
-  preciceTrace("requestGetMeshVertexIDsFromPositions()", size);
+  TRACE(size);
   _com->send(REQUEST_GET_MESH_VERTEX_IDS_FROM_POSITIONS, 0);
   _com->send(meshID, 0);
   _com->send(size, 0);
@@ -471,7 +470,7 @@ int RequestManager:: requestSetMeshEdge
   int firstVertexID,
   int secondVertexID )
 {
-  preciceTrace("requestSetMeshEdge()", meshID, firstVertexID, secondVertexID);
+  TRACE(meshID, firstVertexID, secondVertexID);
   _com->send(REQUEST_SET_MESH_EDGE, 0);
   int data[3] = { meshID, firstVertexID, secondVertexID };
   _com->send(data, 3, 0);
@@ -487,8 +486,7 @@ void RequestManager:: requestSetMeshTriangle
   int secondEdgeID,
   int thirdEdgeID )
 {
-  preciceTrace("requestSetMeshTriangle()", meshID, firstEdgeID, secondEdgeID,
-                thirdEdgeID);
+  TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID);
   _com->send(REQUEST_SET_MESH_TRIANGLE, 0);
   int data[4] = {meshID, firstEdgeID, secondEdgeID, thirdEdgeID};
   _com->send(data, 4, 0);
@@ -516,8 +514,7 @@ void RequestManager:: requestSetMeshQuad
   int thirdEdgeID,
   int fourthEdgeID )
 {
-  preciceTrace("requestSetMeshQuad()", meshID, firstEdgeID, secondEdgeID,
-                thirdEdgeID, fourthEdgeID);
+  TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID);
   _com->send(REQUEST_SET_MESH_QUAD, 0);
   int data[5] = {meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID};
   _com->send(data, 5, 0);
@@ -531,8 +528,7 @@ void RequestManager:: requestSetMeshQuadWithEdges
   int thirdVertexID,
   int fourthVertexID )
 {
-  preciceTrace("requestSetMeshTriangleWithEdges()", meshID, firstVertexID,
-                secondVertexID, thirdVertexID, fourthVertexID);
+  TRACE(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
   _com->send(REQUEST_SET_MESH_QUAD_WITH_EDGES, 0);
   int data[5] = {meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID};
   _com->send(data, 5, 0);

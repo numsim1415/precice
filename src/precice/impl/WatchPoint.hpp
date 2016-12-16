@@ -32,8 +32,8 @@ public:
     */
    WatchPoint (
      const Eigen::VectorXd& pointCoords,
-     const mesh::PtrMesh&    meshToWatch,
-     const std::string&      exportFilename );
+     const mesh::PtrMesh&   meshToWatch,
+     const std::string&     exportFilename );
 
    const mesh::PtrMesh& mesh() const;
 

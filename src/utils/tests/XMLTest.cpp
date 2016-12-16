@@ -4,7 +4,6 @@
 #include "utils/xml/ValidatorEquals.hpp"
 #include "utils/xml/ValidatorOr.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 #include <string>
 
@@ -21,9 +20,7 @@ XMLTest:: XMLTest()
 :
   tarch::tests::TestCase("precice::utils::tests::XMLTest"),
   _testDirectory(""),
-  _vector2D(0.0),
-  _vector3D(0.0),
-  _dynVector()
+  _eigenVectorXd()
 {}
 
 void XMLTest:: setUp()
@@ -61,7 +58,7 @@ void XMLTest:: run()
 
 void XMLTest:: testAttributeConcatenation()
 {
-  preciceTrace("testAttributeConcatenation()");
+  TRACE();
   std::string filename(_testDirectory + "config_xmltest_concatenation.xml");
 
   XMLTag rootTag(*this, "configuration", XMLTag::OCCUR_ONCE);
@@ -83,40 +80,30 @@ void XMLTest:: testAttributeConcatenation()
 
 void XMLTest:: testVectorAttributes()
 {
-  preciceTrace ( "testVectorAttributes()" );
+  TRACE();
   std::string filename (_testDirectory + "config_xmltest_vectorattributes.xml");
 
   XMLTag rootTag(*this, "configuration", XMLTag::OCCUR_ONCE);
-  XMLTag testTag2D(*this, "test-vector2d-attributes", XMLTag::OCCUR_ONCE);
-  XMLTag testTag3D(*this, "test-vector3d-attributes", XMLTag::OCCUR_ONCE);
+  XMLTag testTagEigenXd(*this, "test-eigen-vectorxd-attributes", XMLTag::OCCUR_ONCE);
 
-  XMLAttribute<utils::Vector2D> attr2D("value");
-  XMLAttribute<utils::Vector3D> attr3D("value");
-  testTag2D.addAttribute(attr2D);
-  testTag3D.addAttribute(attr3D);
-  rootTag.addSubtag(testTag2D);
-  rootTag.addSubtag(testTag3D);
+  XMLAttribute<Eigen::VectorXd> attrEigenXd("value");
+  testTagEigenXd.addAttribute(attrEigenXd);
+  rootTag.addSubtag(testTagEigenXd);
 
-  _vector2D = utils::Vector2D(0.0);
-  _vector3D = utils::Vector3D(0.0);
+  _eigenVectorXd = Eigen::VectorXd();
 
   configure(rootTag, filename);
-  validateEquals(_vector2D(0), 1.0);
-  validateEquals(_vector2D(1), 2.0);
-  validateEquals(_vector3D(0), 1.0);
-  validateEquals(_vector3D(1), 2.0);
-  validateEquals(_vector3D(2), 3.0);
+  validateEquals(_eigenVectorXd(0), 3.0);
+  validateEquals(_eigenVectorXd(1), 2.0);
+  validateEquals(_eigenVectorXd(2), 1.0);
 }
 
 void XMLTest:: xmlTagCallback
 (
   XMLTag& callingTag )
 {
-  if (callingTag.getName() == "test-vector2d-attributes") {
-    _vector2D = callingTag.getVector2DAttributeValue("value");
-  }
-  else if (callingTag.getName() == "test-vector3d-attributes") {
-    _vector3D = callingTag.getVector3DAttributeValue("value");
+  if (callingTag.getName() == "test-eigen-vectorxd-attributes") {
+    _eigenVectorXd = callingTag.getEigenVectorXdAttributeValue("value", 3);
   }
 }
 
