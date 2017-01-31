@@ -54,7 +54,30 @@ public:
 };
 
 
+#ifdef PRECICE_NO_PETSC
+#define TEST_ON_MASTER do {                                     \
+    if ( precice::utils::Parallel::getProcessRank() != 0 )      \
+      return;                                                   \
+  } while (false)
 
+#else
+
+#define TEST_ON_MASTER do {                                     \
+    PETSC_COMM_WORLD = PETSC_COMM_SELF;                         \
+    if ( precice::utils::Parallel::getProcessRank() != 0 )      \
+      return;                                                   \
+  } while (false)
+#endif
+
+#define TEST_ON_FOUR do {                                               \
+    if (Par::getCommunicatorSize() > 3) {                               \
+      MPI_Comm comm = utils::Parallel::getRestrictedCommunicator( {0, 1, 2, 3} ); \
+      if (utils::Parallel::getProcessRank() <= 3)                       \
+        utils::Parallel::setGlobalCommunicator(comm);                   \
+      else                                                              \
+        return;                                                         \
+    }                                                                   \
+  } while (false)
 
 }}
 
